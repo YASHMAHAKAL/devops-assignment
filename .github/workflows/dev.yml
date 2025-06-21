@@ -79,6 +79,12 @@ jobs:
           docker build -t $FRONTEND_IMAGE:${{ github.sha }} .
           docker push $FRONTEND_IMAGE:${{ github.sha }}
 
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.6
+
+          
       - name: Initialize Terraform
         working-directory: terraform
         run: terraform init
