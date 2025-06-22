@@ -79,6 +79,8 @@ module "vpc" {
 resource "aws_s3_bucket" "alb_logs" {
   bucket = "yash-devops-assignment-alb-logs"
 
+  force_destroy = true
+
   lifecycle {
     prevent_destroy = false
   }
