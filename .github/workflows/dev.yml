@@ -43,6 +43,13 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Run frontend dev server in background
+        working-directory: frontend
+        run: |
+          npm run build
+          npm run start &
+          sleep 10
+
       - name: Run Cypress tests
         working-directory: frontend
         run: npx cypress run
