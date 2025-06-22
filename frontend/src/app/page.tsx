@@ -6,7 +6,7 @@ export default function Home() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/message')
+    fetch('/api/message')
       .then(res => res.json())
       .then(data => setMessage(data.message))
       .catch(() => setMessage('Failed to fetch backend message.'));

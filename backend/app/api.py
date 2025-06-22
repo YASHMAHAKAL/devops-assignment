@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+import socket
 
 router = APIRouter()
 
@@ -8,5 +9,10 @@ def health_check():
 
 @router.get("/api/message")
 def get_message():
-    return {"message": "Hello from backend"}
+    hostname = socket.gethostname()
+    return {
+        "message": "Hello from backend",
+        "hostname": hostname
+    }
+    
 
