@@ -10,7 +10,6 @@ env:
   BACKEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend-app
   FRONTEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend-app
 
-
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
@@ -58,14 +57,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build backend Docker image
-        working-directory: backend
-        run: docker build -t $BACKEND_IMAGE:${{ github.sha }} .
-
-      - name: Build frontend Docker image
-        working-directory: frontend
-        run: docker build -t $FRONTEND_IMAGE:${{ github.sha }} .
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -76,15 +67,14 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and push backend image
+      - name: Build and push backend image to ECR
         working-directory: backend
         run: |
-          docker build -t $BACKEND_IMAGE:${{ github.sha }} .
-          docker push $BACKEND_IMAGE:${{ github.sha }}
+          docker build -t $BACKEND_IMAGE:latest .
+          docker push $BACKEND_IMAGE:latest
 
-      - name: Build and push frontend image
+      - name: Build and push frontend image to ECR
         working-directory: frontend
         run: |
-          docker build -t $FRONTEND_IMAGE:${{ github.sha }} .
-          docker push $FRONTEND_IMAGE:${{ github.sha }}
-
+          docker build -t $FRONTEND_IMAGE:latest .
+          docker push $FRONTEND_IMAGE:latest
