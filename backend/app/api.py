@@ -8,5 +8,10 @@ def health_check():
 
 @router.get("/api/message")
 def get_message():
-    return {"message": "Hello from backend"}
+    hostname = socket.gethostname()
+    return {
+        "message": "Hello from backend",
+        "hostname": hostname
+    }
+    
 
