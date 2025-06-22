@@ -7,8 +7,9 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  BACKEND_IMAGE: backend-app
-  FRONTEND_IMAGE: frontend-app
+  BACKEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend-app
+  FRONTEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend-app
+
 
 jobs:
   test-and-build:
