@@ -88,6 +88,28 @@ resource "aws_s3_bucket" "alb_logs" {
   }
 }
 
+resource "aws_s3_bucket_policy" "alb_logging_policy" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "AWSALBLoggingPermissions",
+        Effect    = "Allow",
+        Principal = {
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
+        },
+        Action = [
+          "s3:PutObject"
+        ],
+        Resource = "${aws_s3_bucket.alb_logs.arn}/*"
+      }
+    ]
+  })
+}
+
+
 # Cloud Map DNS Namespace
 resource "aws_service_discovery_private_dns_namespace" "dev_namespace" {
   name        = "dev"
