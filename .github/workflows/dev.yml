@@ -87,11 +87,12 @@ jobs:
 
       - name: Terraform Init
         working-directory: terraform
-        run: terraform init \
-          -backend-config="bucket=your-terraform-state-bucket-new" \
-          -backend-config="key=devops-assignment/terraform.tfstate" \
-          -backend-config="region=${{ env.AWS_REGION }}" \
-          -backend-config="dynamodb_table=terraform-locks"
+        run: |
+          terraform init \
+            -backend-config="bucket=your-terraform-state-bucket-new" \
+            -backend-config="key=devops-assignment/terraform.tfstate" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=terraform-locks"
 
       - name: Terraform Destroy
         working-directory: terraform
