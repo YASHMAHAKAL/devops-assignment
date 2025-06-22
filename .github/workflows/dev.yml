@@ -1,4 +1,4 @@
-name: Dev CI/CD Pipeline
+name: Dev CI Pipeline
 
 on:
   push:
@@ -7,11 +7,11 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  BACKEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend-app
-  FRONTEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend-app
+  BACKEND_IMAGE: backend-app
+  FRONTEND_IMAGE: frontend-app
 
 jobs:
-  build-and-deploy:
+  test-and-build:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,13 +43,6 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Run frontend dev server in background
-        working-directory: frontend
-        run: |
-          npm run build
-          npm run start &
-          sleep 10
-
       - name: Run Cypress tests
         working-directory: frontend
         run: npx cypress run
@@ -57,55 +50,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push backend image
+      - name: Build backend Docker image
         working-directory: backend
-        run: |
-          docker build -t $BACKEND_IMAGE:${{ github.sha }} .
-          docker push $BACKEND_IMAGE:${{ github.sha }}
+        run: docker build -t $BACKEND_IMAGE:${{ github.sha }} .
 
-      - name: Build and push frontend image
+      - name: Build frontend Docker image
         working-directory: frontend
-        run: |
-          docker build -t $FRONTEND_IMAGE:${{ github.sha }} .
-          docker push $FRONTEND_IMAGE:${{ github.sha }}
-
-      # Terraform steps
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.5
-
-      - name: Terraform Init
-        working-directory: terraform
-        run: |
-          terraform init \
-            -backend-config="bucket=your-terraform-state-bucket-new" \
-            -backend-config="key=devops-assignment/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
-            -backend-config="dynamodb_table=terraform-locks"
-
-      - name: Terraform Destroy
-        working-directory: terraform
-        run: |
-          terraform destroy -auto-approve \
-            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
-            -var="aws_region=${{ env.AWS_REGION }}" \
-            -var="image_tag=${{ github.sha }}"
-
-      #- name: Terraform Apply
-        #working-directory: terraform
-        #run: |
-          #terraform apply -auto-approve \
-            #-var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
-            #-var="aws_region=${{ env.AWS_REGION }}" \
-            #-var="image_tag=${{ github.sha }}"
+        run: docker build -t $FRONTEND_IMAGE:${{ github.sha }} .
