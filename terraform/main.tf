@@ -23,7 +23,7 @@ resource "aws_iam_role" "ecs_task_exec_role" {
   assume_role_policy = data.aws_iam_policy_document.ecs_assume_role.json
   lifecycle {
     create_before_destroy = true
-    ignore_changes = [name]
+    ignore_changes         = [name]
   }
 }
 
@@ -66,12 +66,12 @@ resource "aws_cloudwatch_log_group" "backend" {
 
 # VPC Configuration
 module "vpc" {
-  source              = "terraform-aws-modules/vpc/aws"
-  version             = "5.1.1"
-  name                = "devops-vpc"
-  cidr                = "10.0.0.0/16"
-  azs                 = ["us-east-1a", "us-east-1b"]
-  public_subnets      = ["10.0.1.0/24", "10.0.2.0/24"]
+  source               = "terraform-aws-modules/vpc/aws"
+  version              = "5.1.1"
+  name                 = "devops-vpc"
+  cidr                 = "10.0.0.0/16"
+  azs                  = ["us-east-1a", "us-east-1b"]
+  public_subnets       = ["10.0.1.0/24", "10.0.2.0/24"]
   enable_dns_hostnames = true
   enable_nat_gateway   = false
 }
@@ -88,7 +88,6 @@ resource "aws_s3_bucket" "alb_logs" {
   }
 }
 
-
 # Cloud Map DNS Namespace
 resource "aws_service_discovery_private_dns_namespace" "dev_namespace" {
   name        = "dev"
@@ -96,10 +95,10 @@ resource "aws_service_discovery_private_dns_namespace" "dev_namespace" {
   vpc         = module.vpc.vpc_id
 }
 
-# Security Group for ALB and ECS Services
+# Security Groups
 resource "aws_security_group" "alb_sg" {
   name        = "alb-sg"
-  description = "Allow ALB and ECS container ports"
+  description = "Allow ALB HTTP"
   vpc_id      = module.vpc.vpc_id
 
   ingress {
@@ -110,22 +109,45 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-    ingress {
-    description     = "Allow traffic to frontend container from ALB"
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "frontend_sg" {
+  name        = "frontend-sg"
+  description = "Allow traffic to frontend from ALB"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
     from_port       = 3000
     to_port         = 3000
     protocol        = "tcp"
     security_groups = [aws_security_group.alb_sg.id]
   }
 
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "backend_sg" {
+  name        = "backend-sg"
+  description = "Allow traffic to backend from ALB"
+  vpc_id      = module.vpc.vpc_id
+
   ingress {
-    description     = "Allow traffic to backend container from ALB"
     from_port       = 8000
     to_port         = 8000
     protocol        = "tcp"
     security_groups = [aws_security_group.alb_sg.id]
   }
-
 
   egress {
     from_port   = 0
@@ -142,11 +164,11 @@ resource "aws_lb" "app_alb" {
   load_balancer_type = "application"
   subnets            = module.vpc.public_subnets
   security_groups    = [aws_security_group.alb_sg.id]
-  
+
   access_logs {
-  bucket  = aws_s3_bucket.alb_logs.bucket
-  enabled = true
-}
+    bucket  = aws_s3_bucket.alb_logs.bucket
+    enabled = true
+  }
 
   lifecycle {
     create_before_destroy = true
@@ -214,7 +236,7 @@ resource "aws_lb_listener_rule" "backend_listener_rule" {
   }
 }
 
-# ECS Task Definitions
+# ECS Task Definitions and Services
 resource "aws_ecs_task_definition" "frontend_task" {
   family                   = "frontend-task"
   network_mode             = "awsvpc"
@@ -269,7 +291,6 @@ resource "aws_ecs_task_definition" "backend_task" {
   }])
 }
 
-# Cloud Map Service for Backend
 resource "aws_service_discovery_service" "backend_discovery" {
   name = "backend"
 
@@ -287,18 +308,17 @@ resource "aws_service_discovery_service" "backend_discovery" {
   }
 }
 
-# ECS Services
 resource "aws_ecs_service" "frontend_service" {
-  name                 = "frontend-service"
-  cluster              = aws_ecs_cluster.app_cluster.id
-  task_definition      = aws_ecs_task_definition.frontend_task.arn
-  launch_type          = "FARGATE"
-  desired_count        = 1
+  name                   = "frontend-service"
+  cluster                = aws_ecs_cluster.app_cluster.id
+  task_definition        = aws_ecs_task_definition.frontend_task.arn
+  launch_type            = "FARGATE"
+  desired_count          = 1
   enable_execute_command = true
 
   network_configuration {
-    subnets          = module.vpc.public_subnets
-    security_groups  = [aws_security_group.alb_sg.id]
+    subnets         = module.vpc.public_subnets
+    security_groups = [aws_security_group.frontend_sg.id]
     assign_public_ip = true
   }
 
@@ -312,16 +332,16 @@ resource "aws_ecs_service" "frontend_service" {
 }
 
 resource "aws_ecs_service" "backend_service" {
-  name                 = "backend-service"
-  cluster              = aws_ecs_cluster.app_cluster.id
-  task_definition      = aws_ecs_task_definition.backend_task.arn
-  launch_type          = "FARGATE"
-  desired_count        = 1
+  name                   = "backend-service"
+  cluster                = aws_ecs_cluster.app_cluster.id
+  task_definition        = aws_ecs_task_definition.backend_task.arn
+  launch_type            = "FARGATE"
+  desired_count          = 1
   enable_execute_command = true
 
   network_configuration {
-    subnets          = module.vpc.public_subnets
-    security_groups  = [aws_security_group.alb_sg.id]
+    subnets         = module.vpc.public_subnets
+    security_groups = [aws_security_group.backend_sg.id]
     assign_public_ip = true
   }
 
