@@ -1,4 +1,4 @@
-# DevOps Internship Assignment - Full Stack Deployment on AWS
+## DevOps Internship Assignment - Full Stack Deployment on AWS
 
 ## 📘 Project Overview
 
