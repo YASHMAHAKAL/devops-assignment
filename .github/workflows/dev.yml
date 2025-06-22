@@ -102,10 +102,10 @@ jobs:
             -var="aws_region=${{ env.AWS_REGION }}" \
             -var="image_tag=${{ github.sha }}"
 
-      - name: Terraform Apply
-        working-directory: terraform
-        run: |
-          terraform apply -auto-approve \
-            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
-            -var="aws_region=${{ env.AWS_REGION }}" \
-            -var="image_tag=${{ github.sha }}"
+      #- name: Terraform Apply
+        #working-directory: terraform
+        #run: |
+          #terraform apply -auto-approve \
+            #-var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
+            #-var="aws_region=${{ env.AWS_REGION }}" \
+            #-var="image_tag=${{ github.sha }}"
