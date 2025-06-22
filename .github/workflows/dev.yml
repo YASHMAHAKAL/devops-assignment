@@ -5,14 +5,14 @@ on:
     branches:
       - develop
 
+env:
+  AWS_REGION: us-east-1
+  BACKEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend-app
+  FRONTEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend-app
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
-    env:
-      AWS_REGION: us-east-1
-      BACKEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend-app
-      FRONTEND_IMAGE: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/frontend-app
 
     steps:
       - name: Checkout code
@@ -79,28 +79,24 @@ jobs:
           docker build -t $FRONTEND_IMAGE:${{ github.sha }} .
           docker push $FRONTEND_IMAGE:${{ github.sha }}
 
-      - name: Install Terraform
+      # Terraform steps
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.7.5
 
       - name: Terraform Init
         working-directory: terraform
-        run: terraform init
+        run: terraform init \
+          -backend-config="bucket=your-terraform-state-bucket-new" \
+          -backend-config="key=devops-assignment/terraform.tfstate" \
+          -backend-config="region=${{ env.AWS_REGION }}" \
+          -backend-config="dynamodb_table=terraform-locks"
 
-      - name: Terraform Destroy (Clean up old infra)
+      - name: Terraform Destroy
         working-directory: terraform
-        continue-on-error: true # prevent failure if infra doesn't exist
         run: |
           terraform destroy -auto-approve \
-            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
-            -var="aws_region=${{ env.AWS_REGION }}" \
-            -var="image_tag=${{ github.sha }}"
-
-      - name: Terraform Plan
-        working-directory: terraform
-        run: |
-          terraform plan \
             -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
             -var="aws_region=${{ env.AWS_REGION }}" \
             -var="image_tag=${{ github.sha }}"

@@ -1,3 +1,13 @@
+terraform {
+  backend "s3" {
+    bucket         = "your-terraform-state-bucket-new"
+    key            = "dev/devops-assignment.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-locks"
+    encrypt        = true
+  }
+}
+
 provider "aws" {
   region = var.aws_region
 }
@@ -11,6 +21,10 @@ resource "aws_ecs_cluster" "app_cluster" {
 resource "aws_iam_role" "ecs_task_exec_role" {
   name               = "ecsTaskExecutionRole"
   assume_role_policy = data.aws_iam_policy_document.ecs_assume_role.json
+  lifecycle {
+    create_before_destroy = true
+    ignore_changes = [name]
+  }
 }
 
 data "aws_iam_policy_document" "ecs_assume_role" {
@@ -37,11 +51,17 @@ resource "aws_iam_role_policy_attachment" "ecs_ssm_policy" {
 resource "aws_cloudwatch_log_group" "frontend" {
   name              = "/ecs/frontend"
   retention_in_days = 1
+  lifecycle {
+    prevent_destroy = false
+  }
 }
 
 resource "aws_cloudwatch_log_group" "backend" {
   name              = "/ecs/backend"
   retention_in_days = 1
+  lifecycle {
+    prevent_destroy = false
+  }
 }
 
 # VPC Configuration
@@ -108,6 +128,9 @@ resource "aws_lb" "app_alb" {
   load_balancer_type = "application"
   subnets            = module.vpc.public_subnets
   security_groups    = [aws_security_group.alb_sg.id]
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Frontend Target Group
