@@ -76,6 +76,19 @@ module "vpc" {
   enable_nat_gateway   = false
 }
 
+resource "aws_s3_bucket" "alb_logs" {
+  bucket = "yash-devops-assignment-alb-logs"
+
+  lifecycle {
+    prevent_destroy = false
+  }
+
+  tags = {
+    Name = "ALB Logs Bucket"
+  }
+}
+
+
 # Cloud Map DNS Namespace
 resource "aws_service_discovery_private_dns_namespace" "dev_namespace" {
   name        = "dev"
@@ -97,21 +110,22 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    description = "Allow traffic to frontend container"
-    from_port   = 3000
-    to_port     = 3000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    ingress {
+    description     = "Allow traffic to frontend container from ALB"
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
   }
 
   ingress {
-    description = "Allow traffic to backend container"
-    from_port   = 8000
-    to_port     = 8000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    description     = "Allow traffic to backend container from ALB"
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
   }
+
 
   egress {
     from_port   = 0
@@ -128,6 +142,12 @@ resource "aws_lb" "app_alb" {
   load_balancer_type = "application"
   subnets            = module.vpc.public_subnets
   security_groups    = [aws_security_group.alb_sg.id]
+  
+  access_logs {
+  bucket  = aws_s3_bucket.alb_logs.bucket
+  enabled = true
+}
+
   lifecycle {
     create_before_destroy = true
   }
