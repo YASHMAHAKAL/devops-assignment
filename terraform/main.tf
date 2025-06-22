@@ -335,7 +335,7 @@ resource "aws_ecs_service" "frontend_service" {
   cluster                = aws_ecs_cluster.app_cluster.id
   task_definition        = aws_ecs_task_definition.frontend_task.arn
   launch_type            = "FARGATE"
-  desired_count          = 1
+  desired_count          = 2
   enable_execute_command = true
 
   network_configuration {
@@ -358,7 +358,7 @@ resource "aws_ecs_service" "backend_service" {
   cluster                = aws_ecs_cluster.app_cluster.id
   task_definition        = aws_ecs_task_definition.backend_task.arn
   launch_type            = "FARGATE"
-  desired_count          = 1
+  desired_count          = 2
   enable_execute_command = true
 
   network_configuration {
