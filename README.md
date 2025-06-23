@@ -42,7 +42,7 @@ Triggered on every push to `develop`:
 * ✅ Frontend build and Cypress tests
 * ✅ Docker image builds for frontend and backend
 * ✅ Images pushed to Amazon ECR with Git SHA tag
-* ✅ Terraform apply with `image_tag` to deploy updated containers
+
 
 ### `main` Branch Workflow (main.yaml)
 
@@ -62,7 +62,6 @@ Triggered on merge to `main`:
 
   * `/` → Frontend (port 3000)
   * `/api/*` → Backend (port 8000)
-* ✅ **Cloud Map** service discovery for inter-service communication
 * ✅ **CloudWatch Dashboards & Alarms** for ECS CPU and memory monitoring
 * ✅ **ALB Access Logs** stored in S3
 * ✅ **Security Groups** with scoped ingress & egress rules
@@ -146,7 +145,7 @@ $ git push origin main
 ## 🙌 Author
 
 **Yash Mahakal**
-DevOps Intern at F13 Technologies
+
 
 ---
 
