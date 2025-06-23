@@ -41,6 +41,14 @@ jobs:
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="dynamodb_table=terraform-locks"
 
+      - name: Terraform Destroy
+        working-directory: terraform
+        run: |
+          terraform destroy -auto-approve \
+            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
+            -var="aws_region=${{ env.AWS_REGION }}" \
+            -var="image_tag=latest"
+
       - name: Terraform Apply (Deploy latest images)
         working-directory: terraform
         run: |
@@ -49,11 +57,4 @@ jobs:
             -var="aws_region=${{ env.AWS_REGION }}" \
             -var="image_tag=latest"
 
-      #- name: Terraform Destroy
-        #working-directory: terraform
-        #run: |
-          #terraform destroy -auto-approve \
-            #-var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
-            #-var="aws_region=${{ env.AWS_REGION }}" \
-            #-var="image_tag=latest"
-
+      
