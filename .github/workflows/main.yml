@@ -49,12 +49,12 @@ jobs:
             -var="aws_region=${{ env.AWS_REGION }}" \
             -var="image_tag=latest"
 
-      - name: Terraform Apply (Deploy latest images)
-        working-directory: terraform
-        run: |
-          terraform apply -auto-approve \
-            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
-            -var="aws_region=${{ env.AWS_REGION }}" \
-            -var="image_tag=latest"
+      #- name: Terraform Apply (Deploy latest images)
+        #working-directory: terraform
+        #run: |
+          #terraform apply -auto-approve \
+            #-var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
+            #-var="aws_region=${{ env.AWS_REGION }}" \
+            #-var="image_tag=latest"
 
       
