@@ -11,7 +11,7 @@ def health_check():
 def get_message():
     hostname = socket.gethostname()
     return {
-        "message": "Hello from backend",
+        "message": "Hello from Pratik Ghortale",
         "hostname": hostname
     }
     
